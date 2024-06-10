@@ -1,0 +1,36 @@
+version: "2.27.0"
+services:
+  db:
+    container_name: "database"
+    ports:
+      - 50000:5432
+    image: "postgres"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    env_file:
+      - ".env"
+  backend:
+    container_name: "api"
+    network_mode: "host"
+    depends_on:
+      - db
+    links:
+      - db:database
+    build: .
+    volumes:
+      - "./:/root/app:z"
+    command:
+      - |
+        mkdir -p /root/pokedex/api
+        cp -r /root/app/migrations /root/pokedex/api/
+        cp -r /root/app/resources /root/pokedex/api/
+        cp -r /root/app/src /root/pokedex/api/
+        cp -r /root/app/requirements.txt /root/pokedex/api/
+        cp -r /root/app/.env /root/pokedex/api/
+        cp -r /root/app/app.sh /root/pokedex/api/
+        cd /root/pokedex/api/
+        python3 -m venv ./venv
+        source venv/bin/activate
+        sh ./app.sh
